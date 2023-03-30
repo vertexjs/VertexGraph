@@ -40,4 +40,10 @@ For more examples and documentation, please visit our website.
 
 ## Contributing
 
-We welcome contributions from the community! If you would like to contribute to MyLibrary, please read our [contribution guidelines](https://chat.openai.com/chat/CONTRIBUTING.md) and [code of conduct](https://chat.openai.com/chat/CODE_OF_CONDUCT.md) before getting started.
+We welcome contributions from the community! If you would like to contribute to VertexGraph, please read our [contribution guidelines](https://chat.openai.com/chat/CONTRIBUTING.md) and [code of conduct](https://chat.openai.com/chat/CODE_OF_CONDUCT.md) before getting started.
+
+
+
+## License
+
+VertexGraph is open-source software licensed under the [MIT License](https://chat.openai.com/chat/LICENSE).
