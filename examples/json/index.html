@@ -11,15 +11,15 @@
 
     <script src="https://d3js.org/d3.v7.min.js" ></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-scale@4" ></script>
-    <script src="GeneralFunctions.js" ></script>
-    <script src="CSVData.js" ></script>
-    <script src="JSONData.js" ></script>
-    <script src="GraphD3.js" ></script>
-    <script src="Main.js" ></script>    
+    <script src="../../src/GeneralFunctions.js" ></script>
+    <script src="../../src/CSVData.js" ></script>
+    <script src="../../src/JSONData.js" ></script>
+    <script src="../../src/GraphD3.js" ></script>
+    <script src="../../src/Main.js" ></script>    
 
     <script>
         // if 'CSV': 
-        const csvUrl = 'export.csv'; 
+        const csvUrl = 'animals.csv'; 
         // if 'JSON': 
         const dataJSON = [
             {
@@ -113,7 +113,7 @@
         ]; 
         
         VertexGraph = new VertexGraphClass();
-        VertexGraph.RunCSV(csvUrl, '#VertexGraph'); 
+        VertexGraph.RunJSON(csvUrl, '#VertexGraph'); 
     </script>
 
 </body>
