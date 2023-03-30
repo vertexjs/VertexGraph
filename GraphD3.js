@@ -1,19 +1,19 @@
 function runGraph() {
     // Set colors, find node radii, find link sizes, and add zooming
-    shuffle(WebGraph.Config.colorSets); 
+    shuffle(VertexGraph.Config.colorSets); 
     colorSetter(); 
     sizeTyper(); 
     linkSizeTyper(); 
     addZoom(); 
     
     // Create static elements in the svg
-    if (WebGraph.Global.svgID.substring(0, 1) != '#') WebGraph.Global.svgID = `#${WebGraph.Global.svgID}`; 
-    const web = d3.select(WebGraph.Global.svgID)
+    if (VertexGraph.Global.svgID.substring(0, 1) != '#') VertexGraph.Global.svgID = `#${VertexGraph.Global.svgID}`; 
+    const web = d3.select(VertexGraph.Global.svgID)
         .style('position', 'relative')
-        .style('width', WebGraph.Global.svgWidth)
-        .style('height', WebGraph.Config.svgHeight); 
+        .style('width', VertexGraph.Global.svgWidth)
+        .style('height', VertexGraph.Config.svgHeight); 
     
-    if (!WebGraph.Config.fullScreenMode) {
+    if (!VertexGraph.Config.fullScreenMode) {
         web.style('left', '50%')
         .style('transform', 'translateX(-50%)')
         .style('margin-top', '5%')
@@ -26,26 +26,26 @@ function runGraph() {
     web.append('rect')
         .attr('x', 0)
         .attr('y', 0)
-        .attr('width', WebGraph.Global.svgWidth)
-        .attr('height', WebGraph.Config.svgHeight)
+        .attr('width', VertexGraph.Global.svgWidth)
+        .attr('height', VertexGraph.Config.svgHeight)
         .attr('id', 'zoomsquare')
-        .attr('fill', WebGraph.Config.backgroundColor)
+        .attr('fill', VertexGraph.Config.backgroundColor)
         .call(d3.drag()
         .on('start', event => panStart(event))
         .on('drag', event => panning(event))
         .on('end', event => panEnd(event)));  
     
     const webGroup = web.append('g').attr('id', 'matrixGroup'); 
-    WebGraph.Global.matrixGroup = document.getElementById("matrixGroup");
+    VertexGraph.Global.matrixGroup = document.getElementById("matrixGroup");
 
-    // Manage force WebGraph.Global.simulation
-    WebGraph.Global.simulation = d3.forceSimulation(WebGraph.Global.nodes)
-        .force('charge', d3.forceManyBody().strength(WebGraph.Config.baseStrength).distanceMax(WebGraph.Config.regularForceDistance))
-        .force('center', d3.forceCenter(WebGraph.Global.centerX, WebGraph.Global.centerY))
+    // Manage force VertexGraph.Global.simulation
+    VertexGraph.Global.simulation = d3.forceSimulation(VertexGraph.Global.nodes)
+        .force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength).distanceMax(VertexGraph.Config.regularForceDistance))
+        .force('center', d3.forceCenter(VertexGraph.Global.centerX, VertexGraph.Global.centerY))
         .on('tick', ticked);
     
     refresh(); 
-    WebGraph.Global.firstRefresh = false; 
+    VertexGraph.Global.firstRefresh = false; 
 
     function ticked() {
         seperateElements(); 
@@ -56,58 +56,58 @@ function runGraph() {
     // Lots of manual tweaking to get "right"
     function seperateElements() {
         // Make first separation uniquely strong
-        if (!WebGraph.Global.seperationActive) return; 
-        const seperationEnhancement = WebGraph.Global.nodes.filter(el => el.data.Type == 'Root').length * 0.005; 
+        if (!VertexGraph.Global.seperationActive) return; 
+        const seperationEnhancement = VertexGraph.Global.nodes.filter(el => el.data.Type == 'Root').length * 0.005; 
 
-        if (WebGraph.Global.firstSeperation) {
-            const enhancedDelay = WebGraph.Config.startSeperateDelay * (1 + (seperationEnhancement / 5)); 
-            const enhancedStrength = WebGraph.Config.baseStrength * (1 + seperationEnhancement); 
+        if (VertexGraph.Global.firstSeperation) {
+            const enhancedDelay = VertexGraph.Config.startSeperateDelay * (1 + (seperationEnhancement / 5)); 
+            const enhancedStrength = VertexGraph.Config.baseStrength * (1 + seperationEnhancement); 
 
             // Strengthen and activate forces for start delay
-            if (WebGraph.Global.ticks < enhancedDelay) {
-                WebGraph.Global.simulation.alphaTarget(WebGraph.Config.seperationAlphaTarget)
+            if (VertexGraph.Global.ticks < enhancedDelay) {
+                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget)
                     .force('charge', d3.forceManyBody().strength(enhancedStrength))
                     .restart(); 
             } 
 
             // Slightly slow down seperation intensity
-            if (WebGraph.Global.ticks > (enhancedDelay / 2)) {
-                const targetRatio = enhancedDelay / WebGraph.Global.ticks; 
-                WebGraph.Global.simulation.alphaTarget(WebGraph.Config.seperationAlphaTarget * (targetRatio - 1))
+            if (VertexGraph.Global.ticks > (enhancedDelay / 2)) {
+                const targetRatio = enhancedDelay / VertexGraph.Global.ticks; 
+                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget * (targetRatio - 1))
             }
 
             // End start seperation
-            if (WebGraph.Global.ticks >= enhancedDelay) {
-                WebGraph.Global.simulation.alphaTarget(0)
+            if (VertexGraph.Global.ticks >= enhancedDelay) {
+                VertexGraph.Global.simulation.alphaTarget(0)
                     .force('center', null)
-                    .force('charge', d3.forceManyBody().strength(WebGraph.Config.baseStrength)); 
-                WebGraph.Global.firstSeperation = false; 
-                WebGraph.Global.seperationActive = false; 
+                    .force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength)); 
+                VertexGraph.Global.firstSeperation = false; 
+                VertexGraph.Global.seperationActive = false; 
             }; 
-            WebGraph.Global.ticks++; 
+            VertexGraph.Global.ticks++; 
         } else {
-            const enhancedDelay = WebGraph.Config.clickSeperateDelay * (1 + (seperationEnhancement / 10));
-            const enhancedStrength = WebGraph.Config.baseStrength * (1 + (seperationEnhancement / 3)); 
+            const enhancedDelay = VertexGraph.Config.clickSeperateDelay * (1 + (seperationEnhancement / 10));
+            const enhancedStrength = VertexGraph.Config.baseStrength * (1 + (seperationEnhancement / 3)); 
 
             // Strengthen and activate forces for expansion delay
-            if (WebGraph.Global.ticks < enhancedDelay) {
-                WebGraph.Global.simulation.alphaTarget(WebGraph.Config.seperationAlphaTarget)
+            if (VertexGraph.Global.ticks < enhancedDelay) {
+                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget)
                     .force('charge', d3.forceManyBody().strength(enhancedStrength))
                     .restart(); 
             }
 
             // Slightly slow down seperation intensity
-            if (WebGraph.Global.ticks > (enhancedDelay / 2)) {
-                const targetRatio = enhancedDelay / WebGraph.Global.ticks; 
-                WebGraph.Global.simulation.alphaTarget(WebGraph.Config.seperationAlphaTarget * (targetRatio - 1))
+            if (VertexGraph.Global.ticks > (enhancedDelay / 2)) {
+                const targetRatio = enhancedDelay / VertexGraph.Global.ticks; 
+                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget * (targetRatio - 1))
             }
 
             // End click seperation
-            if (WebGraph.Global.ticks >= enhancedDelay) {
-                WebGraph.Global.simulation.alphaTarget(0).force('charge', d3.forceManyBody().strength(WebGraph.Config.baseStrength)); 
-                WebGraph.Global.seperationActive = false;
+            if (VertexGraph.Global.ticks >= enhancedDelay) {
+                VertexGraph.Global.simulation.alphaTarget(0).force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength)); 
+                VertexGraph.Global.seperationActive = false;
             }
-            WebGraph.Global.ticks++; 
+            VertexGraph.Global.ticks++; 
         }
     }
 
@@ -117,8 +117,8 @@ function runGraph() {
         let activeNodes = []; 
         let rootNodes = []; 
         let anchoredNodes = []; 
-        for (let i = 0; i < WebGraph.Global.nodes.length; i++) { 
-            const currentNode = WebGraph.Global.nodes[i]; 
+        for (let i = 0; i < VertexGraph.Global.nodes.length; i++) { 
+            const currentNode = VertexGraph.Global.nodes[i]; 
 
             if (currentNode.Active) activeNodes.push(currentNode); 
             if (currentNode.data.Type == 'Root') rootNodes.push(currentNode); 
@@ -126,7 +126,7 @@ function runGraph() {
         }
 
         // On startup, only open roots if set so
-        if (WebGraph.Global.firstRefresh && WebGraph.Config.startCollapsed) {
+        if (VertexGraph.Global.firstRefresh && VertexGraph.Config.startCollapsed) {
             for (let i = (activeNodes.length - 1); i >= 0; i--) {
                 const currentNode = activeNodes[i]; 
                 if (currentNode.data.Type != 'Root') {
@@ -139,8 +139,8 @@ function runGraph() {
         let links = createLinks(activeNodes); 
 
         // Refresh force simulation
-        WebGraph.Global.simulation.nodes(activeNodes)
-            .force('link', d3.forceLink().links(links).distance(d => WebGraph.Global.linkSizeTypes[d.source.data.Type]).strength(1))
+        VertexGraph.Global.simulation.nodes(activeNodes)
+            .force('link', d3.forceLink().links(links).distance(d => VertexGraph.Global.linkSizeTypes[d.source.data.Type]).strength(1))
             .restart(); 
 
         // Create and refresh lines to fit links
@@ -162,7 +162,7 @@ function runGraph() {
             .attr('r', d => radiusMultiply(d) * 0.8)
             .attr('stroke-width', '4px')
             .style('stroke', d => d.data.Color)
-            .style('fill', WebGraph.Config.backgroundColor); 
+            .style('fill', VertexGraph.Config.backgroundColor); 
 
         // Create anchored indicator signs
         const anchorSigns = webGroup.selectAll('.anchorSign'); 
@@ -176,17 +176,17 @@ function runGraph() {
             .exit()
             .remove(); 
 
-        // Create and refresh circles to fit WebGraph.Global.nodes
-        // Create all WebGraph.Global.nodes here and hide WebGraph.Global.nodes if collapsed
+        // Create and refresh circles to fit VertexGraph.Global.nodes
+        // Create all VertexGraph.Global.nodes here and hide VertexGraph.Global.nodes if collapsed
         const circles = webGroup.selectAll('.node'); 
-        circles.data(WebGraph.Global.nodes)
+        circles.data(VertexGraph.Global.nodes)
             .enter()
             .append('circle')
             .attr('class', 'node')
             .attr('id', (d) => {
-                WebGraph.Global.IDnum++; 
-                d.IDnum = WebGraph.Global.IDnum; 
-                return `node${WebGraph.Global.IDnum}`; 
+                VertexGraph.Global.IDnum++; 
+                d.IDnum = VertexGraph.Global.IDnum; 
+                return `node${VertexGraph.Global.IDnum}`; 
             })
             .attr('r', d => radiusMultiply(d))
             .attr('stroke-width', '8px')
@@ -211,7 +211,7 @@ function runGraph() {
 
                 // Change node color
                 if (node.children.length == 0) return; 
-                nodeD3.style('fill-opacity', (WebGraph.Config.collapsedOpacity + WebGraph.Config.expandedOpacity) / 2); 
+                nodeD3.style('fill-opacity', (VertexGraph.Config.collapsedOpacity + VertexGraph.Config.expandedOpacity) / 2); 
             })
             .on('mouseout', d => {
                 const node = d.target.__data__; 
@@ -243,9 +243,9 @@ function runGraph() {
             }); 
         circles.style('fill-opacity', d => opacityFinder(d)); 
 
-        // Create and refresh text to fit WebGraph.Global.nodes
+        // Create and refresh text to fit VertexGraph.Global.nodes
         const text = webGroup.selectAll('text'); 
-        text.data(WebGraph.Global.nodes)
+        text.data(VertexGraph.Global.nodes)
             .enter()
             .append('text')
             .attr('id', d => `text${d.IDnum}`)
@@ -262,7 +262,7 @@ function runGraph() {
             .style('font-family', 'monospace')
             .style('font-weight', 'bold')
             .style("text-anchor", "middle")
-            .style('fill', WebGraph.Config.textColor); 
+            .style('fill', VertexGraph.Config.textColor); 
     }
 
     // Update state every tick
@@ -294,7 +294,7 @@ function runGraph() {
             .attr('cx', d => d.x)
             .attr('cy', d => d.y); 
         
-        // Update WebGraph.Global.nodes' position and visibility
+        // Update VertexGraph.Global.nodes' position and visibility
         // If active: sync force data pos with real pos
         // If inactive: Hide node behind parent
         webGroup.selectAll('.node')
@@ -341,9 +341,9 @@ function runGraph() {
             .attr('x', d => d.x)
             .attr('y', d => d.y); 
             
-        // Add the ability to move WebGraph.Global.nodes slightly after start
-        // Gives time for WebGraph.Global.nodes to seperate
-        if (WebGraph.Global.ticks > WebGraph.Config.clickSeperateDelay) {
+        // Add the ability to move VertexGraph.Global.nodes slightly after start
+        // Gives time for VertexGraph.Global.nodes to seperate
+        if (VertexGraph.Global.ticks > VertexGraph.Config.clickSeperateDelay) {
             movingActivated = true; 
             webGroup.selectAll('circle')
             .call(d3.drag()

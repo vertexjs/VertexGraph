@@ -28,16 +28,16 @@ function flatten(tree) {
     for (let i = 0; i < tree.length; i++) {
         const currentRootNodes = flattenRoot(tree[i]); 
         for (let j = 0; j < currentRootNodes.length; j++) {
-            WebGraph.Global.nodes.push(currentRootNodes[j]); 
+            VertexGraph.Global.nodes.push(currentRootNodes[j]); 
         }
     }
 
-    if (WebGraph.Config.nodeLimit >= 0) WebGraph.Global.nodes.splice(WebGraph.Config.nodeLimit); 
-    for (let i = 0; i < WebGraph.Global.nodes.length; i++) {
-        WebGraph.Global.nodes[i].Active = true; 
-        WebGraph.Global.nodes[i].Hovered = false; 
-        WebGraph.Global.nodes[i].Anchored = false; 
-        WebGraph.Global.nodes[i].shouldBeAnchored = false; 
+    if (VertexGraph.Config.nodeLimit >= 0) VertexGraph.Global.nodes.splice(VertexGraph.Config.nodeLimit); 
+    for (let i = 0; i < VertexGraph.Global.nodes.length; i++) {
+        VertexGraph.Global.nodes[i].Active = true; 
+        VertexGraph.Global.nodes[i].Hovered = false; 
+        VertexGraph.Global.nodes[i].Anchored = false; 
+        VertexGraph.Global.nodes[i].shouldBeAnchored = false; 
     }
 }
 
@@ -49,7 +49,7 @@ function createLinks(nodes) {
         for (let j = 0; j < currentNode.children.length; j++) {
             const currentChild = currentNode.children[j]; 
 
-            const matchingChild = WebGraph.Global.nodes.find(el => el.data == currentChild.data); 
+            const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
             if (matchingChild == undefined) continue; 
             if (currentChild.Active == false) continue; 
 
@@ -64,7 +64,7 @@ function createLinks(nodes) {
 }
 
 function findParentNode(node) {
-    const parent = WebGraph.Global.nodes.find(elem => {
+    const parent = VertexGraph.Global.nodes.find(elem => {
         const child = elem.children.find(el => el == node); 
         if (child == undefined) return false; 
         else return true; 
@@ -82,14 +82,14 @@ function updateBranch(d) {
     for (let i = 0; i < data.children.length; i++) {
         const currentChild = data.children[i]; 
 
-        const matchingChild = WebGraph.Global.nodes.find(el => el.data == currentChild.data); 
+        const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
         if (matchingChild != undefined && !currentChild.Active) childrenActive = false; 
     }
 
     // Always collapse all children if applicable
     // Collapsing will always activate the same way
-    // Otherwise, If expanding and WebGraph.Config.expandMode set to 1, only expand next layer
-    if (childrenActive || WebGraph.Config.expandMode == 0) {
+    // Otherwise, If expanding and VertexGraph.Config.expandMode set to 1, only expand next layer
+    if (childrenActive || VertexGraph.Config.expandMode == 0) {
         function recurse(node) {
             for (let i = 0; i < node.children.length; i++) {
                 const currentChild = node.children[i]; 
@@ -98,7 +98,7 @@ function updateBranch(d) {
             }
         }
         recurse(data); 
-    } else if (WebGraph.Config.expandMode == 1) {
+    } else if (VertexGraph.Config.expandMode == 1) {
         for (let i = 0; i < data.children.length; i++) {
             const currentChild = data.children[i]; 
             currentChild.Active = !childrenActive; 
@@ -106,13 +106,13 @@ function updateBranch(d) {
     }
     
     if (!childrenActive) {
-        WebGraph.Global.ticks = 0; 
-        WebGraph.Global.seperationActive = true; 
+        VertexGraph.Global.ticks = 0; 
+        VertexGraph.Global.seperationActive = true; 
     }
 }
 
 // GENERAL WEB FUNCTIONS
-// Randomly generate colors from a WebGraph.Config.colorSets array with no immediate repetition
+// Randomly generate colors from a VertexGraph.Config.colorSets array with no immediate repetition
 function shuffle(array) {
     let currentIndex = array.length,  randomIndex;
 
@@ -136,15 +136,15 @@ function colorSetter() {
     let setNum = 0; 
 
     // Find all roots and give each a color set
-    for (let i = 0; i < WebGraph.Global.nodes.length; i++) {
-        const currentNode = WebGraph.Global.nodes[i]; 
+    for (let i = 0; i < VertexGraph.Global.nodes.length; i++) {
+        const currentNode = VertexGraph.Global.nodes[i]; 
         const nodeType = currentNode.data.Type;
 
         if (nodeType == 'Root') {
             roots.push(currentNode); 
             setNum++; 
-            if (setNum >= WebGraph.Config.colorSets.length) setNum = 0; 
-            currentNode.data.ColorSet = WebGraph.Config.colorSets[setNum]; 
+            if (setNum >= VertexGraph.Config.colorSets.length) setNum = 0; 
+            currentNode.data.ColorSet = VertexGraph.Config.colorSets[setNum]; 
         }
     }
     
@@ -158,7 +158,7 @@ function colorSetter() {
         let layerColors = {Root: rootColorSet[0]}; 
         let inReverse = false; 
         let setIndex = 1; 
-        for (let j = 1; j < WebGraph.Global.webDepth; j++) {
+        for (let j = 1; j < VertexGraph.Global.webDepth; j++) {
             layerColors[`Layer${j}`] = rootColorSet[setIndex]; 
             if (j % (rootColorSet.length - 1) == 0) {
                 inReverse = !inReverse; 
@@ -168,8 +168,8 @@ function colorSetter() {
         }
 
         // Find root's family
-        for (let j = 0; j < WebGraph.Global.nodes.length; j++) {
-            const currentNode = WebGraph.Global.nodes[j]; 
+        for (let j = 0; j < VertexGraph.Global.nodes.length; j++) {
+            const currentNode = VertexGraph.Global.nodes[j]; 
 
             if (currentNode.data.Type != 'Root' && ((currentNode.data.Root == currentRoot.data.Name) || (currentNode.data.Root == currentRoot))) {
                 rootFamily.push(currentNode); 
@@ -190,43 +190,43 @@ function opacityFinder(d) {
     for (let i = 0; i < d.children.length; i++) {
         const currentChild = d.children[i];  
 
-        const matchingChild = WebGraph.Global.nodes.find(el => el.data == currentChild.data); 
+        const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
         if (matchingChild != undefined && !currentChild.Active) {
-            return WebGraph.Config.collapsedOpacity; 
+            return VertexGraph.Config.collapsedOpacity; 
         }
     }
-    return WebGraph.Config.expandedOpacity; 
+    return VertexGraph.Config.expandedOpacity; 
 }
 
 // Create proper types of circles with corresponding size
 function sizeTyper() {
-    const sizeIncrement = Math.abs(WebGraph.Config.circleMax - WebGraph.Config.circleMin) / (WebGraph.Global.webDepth - 1); 
-    WebGraph.Global.sizeTypes.Root = WebGraph.Config.circleMax; 
-    WebGraph.Global.sizeTypes[`Layer${WebGraph.Global.webDepth - 1}`] = WebGraph.Config.circleMin; 
-    for (let i = 1; i < (WebGraph.Global.webDepth - 1); i++) {
-        const currentSize = WebGraph.Config.circleMax - sizeIncrement * i; 
-        WebGraph.Global.sizeTypes[`Layer${i}`] = currentSize; 
+    const sizeIncrement = Math.abs(VertexGraph.Config.circleMax - VertexGraph.Config.circleMin) / (VertexGraph.Global.webDepth - 1); 
+    VertexGraph.Global.sizeTypes.Root = VertexGraph.Config.circleMax; 
+    VertexGraph.Global.sizeTypes[`Layer${VertexGraph.Global.webDepth - 1}`] = VertexGraph.Config.circleMin; 
+    for (let i = 1; i < (VertexGraph.Global.webDepth - 1); i++) {
+        const currentSize = VertexGraph.Config.circleMax - sizeIncrement * i; 
+        VertexGraph.Global.sizeTypes[`Layer${i}`] = currentSize; 
     }
 }
 
 // Give each size type a link size for children
 function linkSizeTyper() {
-    const sizeIncrement = Math.abs(WebGraph.Config.maxLinkDistance - WebGraph.Config.minLinkDistance) / (WebGraph.Global.webDepth - 2); 
-    WebGraph.Global.linkSizeTypes.Root = WebGraph.Config.maxLinkDistance; 
-    WebGraph.Global.linkSizeTypes[`Layer${WebGraph.Global.webDepth - 2}`] = WebGraph.Config.minLinkDistance; 
-    for (let i = 1; i < (WebGraph.Global.webDepth - 2); i++) {
-        const currentSize = WebGraph.Config.maxLinkDistance - sizeIncrement * i; 
-        WebGraph.Global.linkSizeTypes[`Layer${i}`] = currentSize; 
+    const sizeIncrement = Math.abs(VertexGraph.Config.maxLinkDistance - VertexGraph.Config.minLinkDistance) / (VertexGraph.Global.webDepth - 2); 
+    VertexGraph.Global.linkSizeTypes.Root = VertexGraph.Config.maxLinkDistance; 
+    VertexGraph.Global.linkSizeTypes[`Layer${VertexGraph.Global.webDepth - 2}`] = VertexGraph.Config.minLinkDistance; 
+    for (let i = 1; i < (VertexGraph.Global.webDepth - 2); i++) {
+        const currentSize = VertexGraph.Config.maxLinkDistance - sizeIncrement * i; 
+        VertexGraph.Global.linkSizeTypes[`Layer${i}`] = currentSize; 
     }
 }
 
 // Make radius individually larger based on quantity of children
-// Up until the maximum size ratio based on the default WebGraph.Global.sizeTypes
+// Up until the maximum size ratio based on the default VertexGraph.Global.sizeTypes
 function radiusMultiply(d) {
-    const multiplier = 1 + (d.children.length * WebGraph.Config.radiusMultiplier); 
-    let multipiedSize = WebGraph.Global.sizeTypes[d.data.Type] * multiplier; 
+    const multiplier = 1 + (d.children.length * VertexGraph.Config.radiusMultiplier); 
+    let multipiedSize = VertexGraph.Global.sizeTypes[d.data.Type] * multiplier; 
 
-    const maxMultipliedSize = WebGraph.Global.sizeTypes[d.data.Type] * WebGraph.Config.maxMultipliedRadiusRatio; 
+    const maxMultipliedSize = VertexGraph.Global.sizeTypes[d.data.Type] * VertexGraph.Config.maxMultipliedRadiusRatio; 
     if (multipiedSize > maxMultipliedSize) multipiedSize = maxMultipliedSize; 
 
     return multipiedSize; 
@@ -255,49 +255,49 @@ function adjustLinkStart(data, hierarchyPos, axis) {
 
 // Functions for panning svg
 function pan(dx, dy) {     	
-    WebGraph.Global.transformMatrix[4] += dx;
-    WebGraph.Global.transformMatrix[5] += dy;
+    VertexGraph.Global.transformMatrix[4] += dx;
+    VertexGraph.Global.transformMatrix[5] += dy;
               
-    const newMatrix = "matrix(" +  WebGraph.Global.transformMatrix.join(' ') + ")";
-    WebGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
+    const newMatrix = "matrix(" +  VertexGraph.Global.transformMatrix.join(' ') + ")";
+    VertexGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
 }
 function panStart(event) {
-    WebGraph.Global.lastX = event.x; 
-    WebGraph.Global.lastY = event.y; 
+    VertexGraph.Global.lastX = event.x; 
+    VertexGraph.Global.lastY = event.y; 
 }
 function panning(event) {
-    dx = WebGraph.Global.lastX - event.x; 
-    dy = WebGraph.Global.lastY - event.y; 
-    pan(-dx * WebGraph.Config.panMultiplier, -dy * WebGraph.Config.panMultiplier); 
-    WebGraph.Global.lastX = event.x; 
-    WebGraph.Global.lastY = event.y; 
+    dx = VertexGraph.Global.lastX - event.x; 
+    dy = VertexGraph.Global.lastY - event.y; 
+    pan(-dx * VertexGraph.Config.panMultiplier, -dy * VertexGraph.Config.panMultiplier); 
+    VertexGraph.Global.lastX = event.x; 
+    VertexGraph.Global.lastY = event.y; 
 }
 function panEnd(event) {
-    dx = WebGraph.Global.lastX - event.x; 
-    dy = WebGraph.Global.lastY - event.y; 
-    pan(-dx * WebGraph.Config.panMultiplier, -dy * WebGraph.Config.panMultiplier); 
+    dx = VertexGraph.Global.lastX - event.x; 
+    dy = VertexGraph.Global.lastY - event.y; 
+    pan(-dx * VertexGraph.Config.panMultiplier, -dy * VertexGraph.Config.panMultiplier); 
 }
 
 // Function for moving elements in the svg (Breaks if in a different file)
 function moveStart(event) {
-    if (!event.active) WebGraph.Global.simulation.alphaTarget(0.3).restart();
+    if (!event.active) VertexGraph.Global.simulation.alphaTarget(0.3).restart();
     if (event.subject.Anchored) {
         event.subject.Anchored = false; 
         event.subject.shouldBeAnchored = true; 
     }
-    WebGraph.Global.lastX = event.x; 
-    WebGraph.Global.lastY = event.y; 
+    VertexGraph.Global.lastX = event.x; 
+    VertexGraph.Global.lastY = event.y; 
 }
 function moving(event) {
-    dx = WebGraph.Global.lastX - event.x; 
-    dy = WebGraph.Global.lastY - event.y; 
+    dx = VertexGraph.Global.lastX - event.x; 
+    dy = VertexGraph.Global.lastY - event.y; 
     event.subject.fx = event.x + dx; 
     event.subject.fy = event.y + dy; 
-    WebGraph.Global.lastX = event.x; 
-    WebGraph.Global.lastY = event.y; 
+    VertexGraph.Global.lastX = event.x; 
+    VertexGraph.Global.lastY = event.y; 
 }
 function moveEnd(event) {
-    if (!event.active) WebGraph.Global.simulation.alphaTarget(0);
+    if (!event.active) VertexGraph.Global.simulation.alphaTarget(0);
     if (event.subject.shouldBeAnchored) {
         event.subject.shouldBeAnchored = false; 
         event.subject.Anchored = true; 
@@ -309,17 +309,17 @@ function moveEnd(event) {
 // Functions for zooming svg
 function zoom(scale) {
     for (let i = 0; i < 6; i++) {
-      WebGraph.Global.transformMatrix[i] *= scale;
+      VertexGraph.Global.transformMatrix[i] *= scale;
     }
-    WebGraph.Global.transformMatrix[4] += (1 - scale) * WebGraph.Global.centerX;
-    WebGraph.Global.transformMatrix[5] += (1 - scale) * WebGraph.Global.centerY;
+    VertexGraph.Global.transformMatrix[4] += (1 - scale) * VertexGraph.Global.centerX;
+    VertexGraph.Global.transformMatrix[5] += (1 - scale) * VertexGraph.Global.centerY;
                   
-    const newMatrix = "matrix(" +  WebGraph.Global.transformMatrix.join(' ') + ")";
-    WebGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
+    const newMatrix = "matrix(" +  VertexGraph.Global.transformMatrix.join(' ') + ")";
+    VertexGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
 }
 function addZoom() {
-    let svgElement = document.getElementById(WebGraph.Global.svgID); 
-    if (svgElement == null) svgElement = document.getElementById(WebGraph.Global.svgID.substring(1)); 
+    let svgElement = document.getElementById(VertexGraph.Global.svgID); 
+    if (svgElement == null) svgElement = document.getElementById(VertexGraph.Global.svgID.substring(1)); 
     svgElement.addEventListener('mousewheel', (event) => {
         event.preventDefault();
         if (event.deltaY > 0) {

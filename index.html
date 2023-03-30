@@ -7,15 +7,15 @@
     <title>Document</title>
 </head>
 <body id="body">
-    <svg id="webgraph"></svg>
+    <svg id="VertexGraph"></svg>
 
     <script src="https://d3js.org/d3.v7.min.js" ></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-scale@4" ></script>
     <script src="GeneralFunctions.js" ></script>
-    <script src="WebCSVData.js" ></script>
-    <script src="WebJSONData.js" ></script>
-    <script src="WebD3.js" ></script>
-    <script src="WebGraph.js" ></script>    
+    <script src="CSVData.js" ></script>
+    <script src="JSONData.js" ></script>
+    <script src="GraphD3.js" ></script>
+    <script src="Main.js" ></script>    
 
     <script>
         // if 'CSV': 
@@ -112,8 +112,8 @@
             }
         ]; 
         
-        WebGraph= new WebGraphClass();
-        WebGraph.RunCSV(csvUrl, '#webgraph'); 
+        VertexGraph = new VertexGraphClass();
+        VertexGraph.RunCSV(csvUrl, '#VertexGraph'); 
     </script>
 
 </body>

@@ -20,5 +20,5 @@ function JSONdataSorter(tree) {
             setTypes(currentChild, layerDepth, currentRoot); 
         }
     }
-    WebGraph.Global.webDepth = Math.max(...allWebDepths); 
+    VertexGraph.Global.webDepth = Math.max(...allWebDepths); 
 }

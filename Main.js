@@ -1,5 +1,5 @@
 //class for creating a web graph
-class WebGraphClass {
+class VertexGraphClass {
     constructor()
     {
 
@@ -104,31 +104,28 @@ class WebGraphClass {
     };
 
     RunCSV(url, divID) {
-        // Clean global variables
-        // WebGraph.Global = JSON.parse(JSON.stringify(WebGraph.DefaultStates.Global));  
-
         // Find and set svg height
-        if (WebGraph.Config.fullScreenMode) {
+        if (VertexGraph.Config.fullScreenMode) {
             const body = document.body,
             html = document.documentElement;
-            WebGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-            WebGraph.Config.svgWidthRatio = 1
+            VertexGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+            VertexGraph.Config.svgWidthRatio = 1
         } 
 
         // Find and set svg width
-        WebGraph.Global.svgWidth = WebGraph.Config.svgWidth; 
-        if (WebGraph.Config.svgWidth == -1) {
+        VertexGraph.Global.svgWidth = VertexGraph.Config.svgWidth; 
+        if (VertexGraph.Config.svgWidth == -1) {
             if (window.innerWidth !== undefined) { 
-                WebGraph.Global.svgWidth = window.innerWidth * WebGraph.Config.svgWidthRatio;
+                VertexGraph.Global.svgWidth = window.innerWidth * VertexGraph.Config.svgWidthRatio;
             } else {  
-                WebGraph.Global.svgWidth = document.documentElement.clientWidth * WebGraph.Config.svgWidthRatio;
+                VertexGraph.Global.svgWidth = document.documentElement.clientWidth * VertexGraph.Config.svgWidthRatio;
             }
         }
 
         // Reset global variables effected by svg width and height
-        WebGraph.Global.svgID = divID;
-        WebGraph.Global.centerX = WebGraph.Global.svgWidth / 2; 
-        WebGraph.Global.centerY = WebGraph.Config.svgHeight / 2; 
+        VertexGraph.Global.svgID = divID;
+        VertexGraph.Global.centerX = VertexGraph.Global.svgWidth / 2; 
+        VertexGraph.Global.centerY = VertexGraph.Config.svgHeight / 2; 
 
         d3.csv(url).then(dataInfo => {
             // Arrange columns
@@ -143,27 +140,27 @@ class WebGraphClass {
 
     RunJSON(data, divID) {
         // Find and set svg height
-        if (WebGraph.Config.fullScreenMode) {
+        if (VertexGraph.Config.fullScreenMode) {
             const body = document.body,
             html = document.documentElement;
-            WebGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-            WebGraph.Config.svgWidthRatio = 1
+            VertexGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+            VertexGraph.Config.svgWidthRatio = 1
         } 
 
         // Find and set svg width
-        WebGraph.Global.svgWidth = WebGraph.Config.svgWidth; 
-        if (WebGraph.Config.svgWidth == -1) {
+        VertexGraph.Global.svgWidth = VertexGraph.Config.svgWidth; 
+        if (VertexGraph.Config.svgWidth == -1) {
             if (window.innerWidth !== undefined) { 
-                WebGraph.Global.svgWidth = window.innerWidth * WebGraph.Config.svgWidthRatio;
+                VertexGraph.Global.svgWidth = window.innerWidth * VertexGraph.Config.svgWidthRatio;
             } else {  
-                WebGraph.Global.svgWidth = document.documentElement.clientWidth * WebGraph.Config.svgWidthRatio;
+                VertexGraph.Global.svgWidth = document.documentElement.clientWidth * VertexGraph.Config.svgWidthRatio;
             }
         }
 
         // Reset global variables effected by svg width and height
-        WebGraph.Global.svgID = divID;
-        WebGraph.Global.centerX = WebGraph.Global.svgWidth / 2; 
-        WebGraph.Global.centerY = WebGraph.Config.svgHeight / 2; 
+        VertexGraph.Global.svgID = divID;
+        VertexGraph.Global.centerX = VertexGraph.Global.svgWidth / 2; 
+        VertexGraph.Global.centerY = VertexGraph.Config.svgHeight / 2; 
 
         JSONdataSorter(data); 
         flatten(data); 
