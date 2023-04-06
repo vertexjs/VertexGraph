@@ -47,7 +47,7 @@ VertexGraph also includes multiple features to improve the usability of the gene
 
 ## Settings
 
-VertexGraph also includes a wide assortment of configurable variables for graph customzation. Each configuarble variable is given a default value that can be changed before running an instance of a VertexGraph. 
+VertexGraph also includes a wide assortment of configurable variables for graph customzation. Each configurable variable is given a default value that can be changed before running an instance of a VertexGraph. 
 
 ### General
 
