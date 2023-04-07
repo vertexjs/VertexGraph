@@ -10,3 +10,8 @@ main {
 .aboutText {
     font-size: 20px;
 }
+
+#VertexGraph {
+    left: 50%; 
+    transform: translateX(-50%); 
+}
