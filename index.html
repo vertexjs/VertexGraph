@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Vertex Graph</title>
 </head>
 <body id="body">
+    <main>
+        <h1 id="title">Welcome to VertexGraph</h1>
+        <h3 class="aboutText">
+            VertexJS or VertexGraph is a JavaScript library for creating interactive visualizations of relations and nodes provided in 
+            CSV or JSON format. It is designed to be easy to use, highly customizable, and compatible with a wide range of browsers.
+        </h3>
+        <a href="https://github.com/vertexjs/VertexGraph" class="aboutText">Find more about VertexGraph here</a>
+    </main>
     <svg id="VertexGraph"></svg>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -16,7 +25,10 @@
     <script>
         const csvUrl = 'animals.csv';       
         VertexGraph = new VertexGraphClass();
-        VertexGraph.Config.manualOrderSet= [3,2,1,4];
+        VertexGraph.Config.fullScreenMode = false; 
+        VertexGraph.Config.svgHeight = 900; 
+        VertexGraph.Config.maxLinkDistance = 200; 
+        VertexGraph.Config.minLinkDistance = 100; 
         VertexGraph.RunCSV(csvUrl, '#VertexGraph'); 
     </script>
 

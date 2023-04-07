@@ -574,7 +574,6 @@ function runGraph() {
     if (!VertexGraph.Config.fullScreenMode) {
         web.style('left', '50%')
         .style('transform', 'translateX(-50%)')
-        .style('margin-top', '5%')
         .style('border', '2px solid black'); 
     } else {
         d3.select('#body').style('margin', 0)
