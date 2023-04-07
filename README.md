@@ -2,6 +2,7 @@
 
 
 VertexJS or VertexGraph is a JavaScript library for creating interactive visualizations of relations and nodes provided in CSV or JSON format. It is designed to be easy to use, highly customizable, and compatible with a wide range of browsers.
+[GitHub Pages](https://vertexjs.github.io/VertexGraph/)
 
 ## Installation
 
