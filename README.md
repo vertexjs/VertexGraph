@@ -8,13 +8,9 @@ VertexJS or VertexGraph is a JavaScript library for creating interactive visuali
 To use VertexGraph  in your project, simply include the following scripts tag in the head section of your HTML file (alternatively you can download source files and include them to your project):
 
 ```html
-    <script src="https://d3js.org/d3.v7.min.js" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4" ></script>
-    <script src="../../src/GeneralFunctions.js" ></script>
-    <script src="../../src/CSVData.js" ></script>
-    <script src="../../src/JSONData.js" ></script>
-    <script src="../../src/GraphD3.js" ></script>
-    <script src="../../src/Main.js" ></script>  
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="../../src/VertexGraph.js"></script>
 ```
 
 
