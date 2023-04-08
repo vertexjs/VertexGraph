@@ -3,8 +3,7 @@
     background-color: rgb(43, 43, 43); 
 }
 main {
-    margin-top: 30px; 
-    margin-bottom: 35px; 
+    margin: 30px 5% 50px; 
     font-family: monospace; 
     text-align: center;
 }
