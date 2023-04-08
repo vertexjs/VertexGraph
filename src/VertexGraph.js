@@ -725,7 +725,6 @@ function runGraph() {
             .enter()
             .append('line')
             .attr('class', 'anchorSign')
-            .style('stroke', d => d.data.Color)
             .style('stroke-width', 5); 
         anchorSigns.data(anchoredNodes)
             .exit()
@@ -738,7 +737,7 @@ function runGraph() {
             .enter()
             .append('circle')
             .attr('class', 'node')
-            .attr('id', (d) => {
+            .attr('id', d => {
                 VertexGraph.Global.IDnum++; 
                 d.IDnum = VertexGraph.Global.IDnum; 
                 return `node${VertexGraph.Global.IDnum}`; 
@@ -840,6 +839,7 @@ function runGraph() {
             })
 
         webGroup.selectAll('.anchorSign')
+            .style('stroke', d => d.data.Color)
             .attr('x1', d => d.x)
             .attr('y1', d => d.y + radiusMultiply(d))
             .attr('x2', d => d.x)
