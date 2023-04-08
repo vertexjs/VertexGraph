@@ -571,12 +571,10 @@ function runGraph() {
         .style('width', VertexGraph.Global.svgWidth)
         .style('height', VertexGraph.Config.svgHeight); 
     
-    if (!VertexGraph.Config.fullScreenMode) {
-        web.style('border', '2px solid black'); 
-    } else {
+    if (VertexGraph.Config.fullScreenMode) {
         d3.select('#body').style('margin', 0)
             .style('overflow-y', 'hidden'); 
-    }
+    } 
 
     web.append('rect')
         .attr('x', 0)
