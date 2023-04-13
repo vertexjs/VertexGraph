@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body id="body">
+    <svg id="VertexGraph1"></svg>
+    <svg id="VertexGraph2"></svg>
+
+    <style>
+        #VertexGraph1 {
+            float:left;
+            border: 3px solid black;
+        }
+        #VertexGraph2 {
+            float:right;
+            border: 3px solid black;
+        }
+    </style>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="../../src/VertexGraph.js"></script>    
+    
+    <script>
+        const csvUrl = 'random.csv';       
+        VertexGraph1 = new VertexGraphClass();
+        VertexGraph1.Config.fullScreenMode = false; 
+        VertexGraph1.Config.svgHeight = 500; 
+        VertexGraph1.Config.svgWidthRatio = 0.45; 
+        VertexGraph1.RunCSV(csvUrl, '#VertexGraph1'); 
+
+        VertexGraph2 = new VertexGraphClass();
+        VertexGraph2.Config.fullScreenMode = false; 
+        VertexGraph2.Config.svgHeight = 500; 
+        VertexGraph2.Config.svgWidthRatio = 0.45; 
+        VertexGraph2.RunCSV(csvUrl, '#VertexGraph2'); 
+    </script>
+
+</body>
+</html>
