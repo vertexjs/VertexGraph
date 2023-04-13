@@ -11,8 +11,16 @@ To use VertexGraph  in your project, simply include the following scripts tag in
 ```html
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+    <script src="https://vertexjs.github.io/VertexGraph/src/VertexGraph.js"></script>
+```
+
+OR
+```html
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
     <script src="../../src/VertexGraph.js"></script>
 ```
+
 
 
 ## Usage
