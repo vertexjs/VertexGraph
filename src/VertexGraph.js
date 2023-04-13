@@ -1,16 +1,16 @@
 // CSV DATA SORTER
 // Sorts csv data after being converted into JSON through d3
-function CSVdataSorter(data) {
-    VertexGraph.Global.webDepth = data.columns.length; 
-    for (let i = 1; i < VertexGraph.Global.webDepth; i++) {
-        VertexGraph.Global.index[`Layer${i}`] = []; 
+function CSVdataSorter(data, currentGraph) {
+    currentGraph.Global.webDepth = data.columns.length; 
+    for (let i = 1; i < currentGraph.Global.webDepth; i++) {
+        currentGraph.Global.index[`Layer${i}`] = []; 
     }
 
     // Find link attached to column
-    // Used to attach a link to VertexGraph.Global.nodes during VertexGraph.Global.index creation
+    // Used to attach a link to currentGraph.Global.nodes during currentGraph.Global.index creation
     function linkColumnFinder(column) {
         const columnIndex = data.columns.indexOf(column); 
-        let matchingLinkCol = VertexGraph.Config.linkColumns.find(elem => (elem.Target == column || elem.Target == (columnIndex + 1)));
+        let matchingLinkCol = currentGraph.Config.linkColumns.find(elem => (elem.Target == column || elem.Target == (columnIndex + 1)));
 
         if (matchingLinkCol == undefined) return undefined; 
         if (typeof matchingLinkCol.ID == 'string') return matchingLinkCol.ID; 
@@ -21,7 +21,7 @@ function CSVdataSorter(data) {
     for (let i = 0; i < data.length; i++) {
         // Find unique Roots
         let currentRoot; 
-        const matchingRoot = VertexGraph.Global.index.Root.find(elem => data[i][data.columns[0]] == elem.Name); 
+        const matchingRoot = currentGraph.Global.index.Root.find(elem => data[i][data.columns[0]] == elem.Name); 
         if (matchingRoot == undefined) {
             let indexObj = {
                 Name: `${data[i][data.columns[0]]}`,
@@ -31,16 +31,16 @@ function CSVdataSorter(data) {
             const rootLinkCol = linkColumnFinder(data.columns[0]); 
             if (rootLinkCol != undefined) indexObj.Link = data[i][rootLinkCol]; 
 
-            VertexGraph.Global.index.Root.push(indexObj); 
+            currentGraph.Global.index.Root.push(indexObj); 
         }
-        currentRoot = VertexGraph.Global.index.Root.find(elem => data[i][data.columns[0]] == elem.Name);
+        currentRoot = currentGraph.Global.index.Root.find(elem => data[i][data.columns[0]] == elem.Name);
 
         // Find unique middle layers
         // Checks name uniqueness as well as if the parents match
-        for (let j = 1; j < VertexGraph.Global.webDepth; j++) {
+        for (let j = 1; j < currentGraph.Global.webDepth; j++) {
 
             // Name Check
-            let potentialMatches = VertexGraph.Global.index[`Layer${j}`].filter(elem => elem.Name == data[i][data.columns[j]]); 
+            let potentialMatches = currentGraph.Global.index[`Layer${j}`].filter(elem => elem.Name == data[i][data.columns[j]]); 
             // Root Check
             potentialMatches = potentialMatches.filter(elem => elem.Root == currentRoot.Name); 
             // Middle parent check
@@ -49,7 +49,7 @@ function CSVdataSorter(data) {
             }
             const match = potentialMatches[0];  
 
-            if (j != (VertexGraph.Global.webDepth - 1) && match != undefined) continue; 
+            if (j != (currentGraph.Global.webDepth - 1) && match != undefined) continue; 
 
             let indexObj = {
                 Name: `${data[i][data.columns[j]]}`, 
@@ -63,33 +63,33 @@ function CSVdataSorter(data) {
             const rootLinkCol = linkColumnFinder(data.columns[j]); 
             if (rootLinkCol != undefined) indexObj.Link = data[i][rootLinkCol]; 
 
-            VertexGraph.Global.index[`Layer${j}`].push(indexObj); 
+            currentGraph.Global.index[`Layer${j}`].push(indexObj); 
         }
     } 
 
     // Delete midlayers in 2 configurable ways
-    if (VertexGraph.Config.branchMode == 0) {
-        branchChopper(); 
-    } else if (VertexGraph.Config.branchMode == 1) {
-        selectiveNodeDeleter(); 
+    if (currentGraph.Config.branchMode == 0) {
+        branchChopper(currentGraph); 
+    } else if (currentGraph.Config.branchMode == 1) {
+        selectiveNodeDeleter(currentGraph); 
     }
 
     // Remove families of roots outside root limit
-    if (VertexGraph.Config.rootLimit >= 0) {
-        VertexGraph.Global.index.Root.splice(VertexGraph.Config.rootLimit)
+    if (currentGraph.Config.rootLimit >= 0) {
+        currentGraph.Global.index.Root.splice(currentGraph.Config.rootLimit)
     }
 
     // Create deep JSON representation of data
-    for (let i = 0; i < VertexGraph.Global.index.Root.length; i++) {
+    for (let i = 0; i < currentGraph.Global.index.Root.length; i++) {
         // Create root
         const dataObj = {
-            data: VertexGraph.Global.index.Root[i], 
+            data: currentGraph.Global.index.Root[i], 
             children: []
         }
-        VertexGraph.Global.dataTree[i] = dataObj; 
-        const currentRoot = VertexGraph.Global.dataTree[i]; 
+        currentGraph.Global.dataTree[i] = dataObj; 
+        const currentRoot = currentGraph.Global.dataTree[i]; 
 
-        const layer1Children = VertexGraph.Global.index.Layer1.filter(elem => elem.Root == currentRoot.data.Name);
+        const layer1Children = currentGraph.Global.index.Layer1.filter(elem => elem.Root == currentRoot.data.Name);
         for (let j = 0; j < layer1Children.length; j++) {
             const dataObj = {
                 data: layer1Children[j], 
@@ -97,18 +97,18 @@ function CSVdataSorter(data) {
             }
             currentRoot.children.push(dataObj); 
             const currentLayer1 = currentRoot.children[j]; 
-            createMidChildren(currentLayer1, currentRoot); 
+            createMidChildren(currentLayer1, currentRoot, currentGraph); 
         }
     }
 
-    // Create VertexGraph.Global.nodes of JSON
-    flatten(VertexGraph.Global.dataTree); 
+    // Create currentGraph.Global.nodes of JSON
+    flatten(currentGraph.Global.dataTree, currentGraph); 
 }
 
-// Prevent link columns from being VertexGraph.Global.nodes
-function linkColumnUpdater(data) {
-    for (let i = 0; i < VertexGraph.Config.linkColumns.length; i++) {
-        const currentColumn = VertexGraph.Config.linkColumns[i]; 
+// Prevent link columns from being currentGraph.Global.nodes
+function linkColumnUpdater(data, currentGraph) {
+    for (let i = 0; i < currentGraph.Config.linkColumns.length; i++) {
+        const currentColumn = currentGraph.Config.linkColumns[i]; 
         if (typeof currentColumn.ID == 'string') {
             const colLocation = data.columns.indexOf(currentColumn.ID); 
             data.columns.splice(colLocation, 1); 
@@ -121,12 +121,12 @@ function linkColumnUpdater(data) {
 }
 
 // Alter column order to fit manual setting
-function orderColumns(data) {
-    if (VertexGraph.Config.manualOrderSet == '') return; 
+function orderColumns(data, currentGraph) {
+    if (currentGraph.Config.manualOrderSet == '') return; 
 
     let newColumns = []; 
-    for (let i = 0; i < VertexGraph.Config.manualOrderSet.length; i++) {
-        const selectedColumn = VertexGraph.Config.manualOrderSet[i]; 
+    for (let i = 0; i < currentGraph.Config.manualOrderSet.length; i++) {
+        const selectedColumn = currentGraph.Config.manualOrderSet[i]; 
         if (typeof selectedColumn == 'string') {
             const currentColumn = data.columns.find(elem => elem == selectedColumn); 
             newColumns.push(currentColumn); 
@@ -138,11 +138,11 @@ function orderColumns(data) {
     data.columns = newColumns; 
 }
 
-// Create children in VertexGraph.Global.index for JSON
-function createMidChildren(item, root) {
+// Create children in currentGraph.Global.index for JSON
+function createMidChildren(item, root, currentGraph) {
     const itemLayerNum = parseInt(item.data.Type.substring(5)); 
     const childLayerNum = itemLayerNum + 1; 
-    let childLayer = VertexGraph.Global.index[`Layer${childLayerNum}`]; 
+    let childLayer = currentGraph.Global.index[`Layer${childLayerNum}`]; 
 
     if (childLayer == undefined) return; 
 
@@ -160,14 +160,14 @@ function createMidChildren(item, root) {
         }
         item.children.push(dataObj); 
         const currentLayer = item.children[i]; 
-        createMidChildren(currentLayer, root); 
+        createMidChildren(currentLayer, root, currentGraph); 
     }
 }
 
 // Entirely remove branches once there is an empty node
-function branchChopper() {
-    for (let i = (VertexGraph.Global.webDepth - 1); i > 0; i--) {
-        const currentLayer = VertexGraph.Global.index[`Layer${i}`]; 
+function branchChopper(currentGraph) {
+    for (let i = (currentGraph.Global.webDepth - 1); i > 0; i--) {
+        const currentLayer = currentGraph.Global.index[`Layer${i}`]; 
 
         for (let j = (currentLayer.length - 1); j > -1; j--) {
             const currentItem = currentLayer[j]; 
@@ -190,9 +190,9 @@ function branchChopper() {
 }
 
 // Remove empty midlayers that dont have children with content
-function selectiveNodeDeleter() {
-    for (let i = 1; i < VertexGraph.Global.webDepth; i++) {
-        const currentLayer = VertexGraph.Global.index[`Layer${i}`]; 
+function selectiveNodeDeleter(currentGraph) {
+    for (let i = 1; i < currentGraph.Global.webDepth; i++) {
+        const currentLayer = currentGraph.Global.index[`Layer${i}`]; 
 
         for (let j = (currentLayer.length - 1); j > -1; j--) {
             const currentItem = currentLayer[j]; 
@@ -201,8 +201,8 @@ function selectiveNodeDeleter() {
             // Find every node down the branch of the current midlayer
             let branchIsEmpty = true; 
             let lowerLayerContent = []; 
-            for (let e = (VertexGraph.Global.webDepth - 2); e > i; e--) {
-                let potentialLowerItems = VertexGraph.Global.index[`Layer${e}`].filter(elem => elem.familyID == currentItem.familyID); 
+            for (let e = (currentGraph.Global.webDepth - 2); e > i; e--) {
+                let potentialLowerItems = currentGraph.Global.index[`Layer${e}`].filter(elem => elem.familyID == currentItem.familyID); 
                 potentialLowerItems = potentialLowerItems.filter(elem => elem[`Parent${i}`] == currentItem.Name); 
                 const currentLowerItem = potentialLowerItems[0]; 
                 
@@ -225,7 +225,7 @@ function selectiveNodeDeleter() {
 
 // GENERAL DATA FUNCTIONS
 // flatten deep JSON
-function flatten(tree) {
+function flatten(tree, currentGraph) {
     // Create node array based on tree
     function flattenRoot(data) {
         let nodes = []; 
@@ -245,7 +245,6 @@ function flatten(tree) {
 
             const difference = layerA - layerB; 
             return difference; 
-
         })
 
         return nodes;
@@ -253,28 +252,28 @@ function flatten(tree) {
     for (let i = 0; i < tree.length; i++) {
         const currentRootNodes = flattenRoot(tree[i]); 
         for (let j = 0; j < currentRootNodes.length; j++) {
-            VertexGraph.Global.nodes.push(currentRootNodes[j]); 
+            currentGraph.Global.nodes.push(currentRootNodes[j]); 
         }
     }
 
-    if (VertexGraph.Config.nodeLimit >= 0) VertexGraph.Global.nodes.splice(VertexGraph.Config.nodeLimit); 
-    for (let i = 0; i < VertexGraph.Global.nodes.length; i++) {
-        VertexGraph.Global.nodes[i].Active = true; 
-        VertexGraph.Global.nodes[i].Hovered = false; 
-        VertexGraph.Global.nodes[i].Anchored = false; 
-        VertexGraph.Global.nodes[i].shouldBeAnchored = false; 
+    if (currentGraph.Config.nodeLimit >= 0) currentGraph.Global.nodes.splice(currentGraph.Config.nodeLimit); 
+    for (let i = 0; i < currentGraph.Global.nodes.length; i++) {
+        currentGraph.Global.nodes[i].Active = true; 
+        currentGraph.Global.nodes[i].Hovered = false; 
+        currentGraph.Global.nodes[i].Anchored = false; 
+        currentGraph.Global.nodes[i].shouldBeAnchored = false; 
     }
 }
 
 // Create links of nodes
-function createLinks(nodes) {
+function createLinks(nodes, currentGraph) {
     let links = []; 
     for (let i = 0; i < nodes.length; i++) {
         const currentNode = nodes[i]; 
         for (let j = 0; j < currentNode.children.length; j++) {
             const currentChild = currentNode.children[j]; 
 
-            const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
+            const matchingChild = currentGraph.Global.nodes.find(el => el.data == currentChild.data); 
             if (matchingChild == undefined) continue; 
             if (currentChild.Active == false) continue; 
 
@@ -288,8 +287,8 @@ function createLinks(nodes) {
     return links; 
 }
 
-function findParentNode(node) {
-    const parent = VertexGraph.Global.nodes.find(elem => {
+function findParentNode(node, currentGraph) {
+    const parent = currentGraph.Global.nodes.find(elem => {
         const child = elem.children.find(el => el == node); 
         if (child == undefined) return false; 
         else return true; 
@@ -300,21 +299,21 @@ function findParentNode(node) {
 // When node clicked:
 // If children all exist => remove children
 // If children dont all exist => create all children OR create next layer
-function updateBranch(d) {
+function updateBranch(d, currentGraph) {
     const data = d.target.__data__; 
 
     let childrenActive = true; 
     for (let i = 0; i < data.children.length; i++) {
         const currentChild = data.children[i]; 
 
-        const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
+        const matchingChild = currentGraph.Global.nodes.find(el => el.data == currentChild.data); 
         if (matchingChild != undefined && !currentChild.Active) childrenActive = false; 
     }
 
     // Always collapse all children if applicable
     // Collapsing will always activate the same way
-    // Otherwise, If expanding and VertexGraph.Config.expandMode set to 1, only expand next layer
-    if (childrenActive || VertexGraph.Config.expandMode == 0) {
+    // Otherwise, If expanding and currentGraph.Config.expandMode set to 1, only expand next layer
+    if (childrenActive || currentGraph.Config.expandMode == 0) {
         function recurse(node) {
             for (let i = 0; i < node.children.length; i++) {
                 const currentChild = node.children[i]; 
@@ -323,7 +322,7 @@ function updateBranch(d) {
             }
         }
         recurse(data); 
-    } else if (VertexGraph.Config.expandMode == 1) {
+    } else if (currentGraph.Config.expandMode == 1) {
         for (let i = 0; i < data.children.length; i++) {
             const currentChild = data.children[i]; 
             currentChild.Active = !childrenActive; 
@@ -331,13 +330,13 @@ function updateBranch(d) {
     }
     
     if (!childrenActive) {
-        VertexGraph.Global.ticks = 0; 
-        VertexGraph.Global.seperationActive = true; 
+        currentGraph.Global.ticks = 0; 
+        currentGraph.Global.seperationActive = true; 
     }
 }
 
 // GENERAL WEB FUNCTIONS
-// Randomly generate colors from a VertexGraph.Config.colorSets array with no immediate repetition
+// Randomly generate colors from a currentGraph.Config.colorSets array with no immediate repetition
 function shuffle(array) {
     let currentIndex = array.length,  randomIndex;
 
@@ -356,20 +355,20 @@ function shuffle(array) {
 }
 
 // Set colors based on layer type
-function colorSetter() {
+function colorSetter(currentGraph) {
     let roots = []; 
     let setNum = 0; 
 
     // Find all roots and give each a color set
-    for (let i = 0; i < VertexGraph.Global.nodes.length; i++) {
-        const currentNode = VertexGraph.Global.nodes[i]; 
+    for (let i = 0; i < currentGraph.Global.nodes.length; i++) {
+        const currentNode = currentGraph.Global.nodes[i]; 
         const nodeType = currentNode.data.Type;
 
         if (nodeType == 'Root') {
             roots.push(currentNode); 
             setNum++; 
-            if (setNum >= VertexGraph.Config.colorSets.length) setNum = 0; 
-            currentNode.data.ColorSet = VertexGraph.Config.colorSets[setNum]; 
+            if (setNum >= currentGraph.Config.colorSets.length) setNum = 0; 
+            currentNode.data.ColorSet = currentGraph.Config.colorSets[setNum]; 
         }
     }
     
@@ -383,7 +382,7 @@ function colorSetter() {
         let layerColors = {Root: rootColorSet[0]}; 
         let inReverse = false; 
         let setIndex = 1; 
-        for (let j = 1; j < VertexGraph.Global.webDepth; j++) {
+        for (let j = 1; j < currentGraph.Global.webDepth; j++) {
             layerColors[`Layer${j}`] = rootColorSet[setIndex]; 
             if (j % (rootColorSet.length - 1) == 0) {
                 inReverse = !inReverse; 
@@ -393,8 +392,8 @@ function colorSetter() {
         }
 
         // Find root's family
-        for (let j = 0; j < VertexGraph.Global.nodes.length; j++) {
-            const currentNode = VertexGraph.Global.nodes[j]; 
+        for (let j = 0; j < currentGraph.Global.nodes.length; j++) {
+            const currentNode = currentGraph.Global.nodes[j]; 
 
             if (currentNode.data.Type != 'Root' && ((currentNode.data.Root == currentRoot.data.Name) || (currentNode.data.Root == currentRoot))) {
                 rootFamily.push(currentNode); 
@@ -411,56 +410,56 @@ function colorSetter() {
 }
 
 // Assigns opacity value depending on if there are collapsed children
-function opacityFinder(d) {
+function opacityFinder(d, currentGraph) {
     for (let i = 0; i < d.children.length; i++) {
         const currentChild = d.children[i];  
 
-        const matchingChild = VertexGraph.Global.nodes.find(el => el.data == currentChild.data); 
+        const matchingChild = currentGraph.Global.nodes.find(el => el.data == currentChild.data); 
         if (matchingChild != undefined && !currentChild.Active) {
-            return VertexGraph.Config.collapsedOpacity; 
+            return currentGraph.Config.collapsedOpacity; 
         }
     }
-    return VertexGraph.Config.expandedOpacity; 
+    return currentGraph.Config.expandedOpacity; 
 }
 
 // Create proper types of circles with corresponding size
-function sizeTyper() {
-    const sizeIncrement = Math.abs(VertexGraph.Config.circleMax - VertexGraph.Config.circleMin) / (VertexGraph.Global.webDepth - 1); 
-    VertexGraph.Global.sizeTypes.Root = VertexGraph.Config.circleMax; 
-    VertexGraph.Global.sizeTypes[`Layer${VertexGraph.Global.webDepth - 1}`] = VertexGraph.Config.circleMin; 
-    for (let i = 1; i < (VertexGraph.Global.webDepth - 1); i++) {
-        const currentSize = VertexGraph.Config.circleMax - sizeIncrement * i; 
-        VertexGraph.Global.sizeTypes[`Layer${i}`] = currentSize; 
+function sizeTyper(currentGraph) {
+    const sizeIncrement = Math.abs(currentGraph.Config.circleMax - currentGraph.Config.circleMin) / (currentGraph.Global.webDepth - 1); 
+    currentGraph.Global.sizeTypes.Root = currentGraph.Config.circleMax; 
+    currentGraph.Global.sizeTypes[`Layer${currentGraph.Global.webDepth - 1}`] = currentGraph.Config.circleMin; 
+    for (let i = 1; i < (currentGraph.Global.webDepth - 1); i++) {
+        const currentSize = currentGraph.Config.circleMax - sizeIncrement * i; 
+        currentGraph.Global.sizeTypes[`Layer${i}`] = currentSize; 
     }
 }
 
 // Give each size type a link size for children
-function linkSizeTyper() {
-    const sizeIncrement = Math.abs(VertexGraph.Config.maxLinkDistance - VertexGraph.Config.minLinkDistance) / (VertexGraph.Global.webDepth - 2); 
-    VertexGraph.Global.linkSizeTypes.Root = VertexGraph.Config.maxLinkDistance; 
-    VertexGraph.Global.linkSizeTypes[`Layer${VertexGraph.Global.webDepth - 2}`] = VertexGraph.Config.minLinkDistance; 
-    for (let i = 1; i < (VertexGraph.Global.webDepth - 2); i++) {
-        const currentSize = VertexGraph.Config.maxLinkDistance - sizeIncrement * i; 
-        VertexGraph.Global.linkSizeTypes[`Layer${i}`] = currentSize; 
+function linkSizeTyper(currentGraph) {
+    const sizeIncrement = Math.abs(currentGraph.Config.maxLinkDistance - currentGraph.Config.minLinkDistance) / (currentGraph.Global.webDepth - 2); 
+    currentGraph.Global.linkSizeTypes.Root = currentGraph.Config.maxLinkDistance; 
+    currentGraph.Global.linkSizeTypes[`Layer${currentGraph.Global.webDepth - 2}`] = currentGraph.Config.minLinkDistance; 
+    for (let i = 1; i < (currentGraph.Global.webDepth - 2); i++) {
+        const currentSize = currentGraph.Config.maxLinkDistance - sizeIncrement * i; 
+        currentGraph.Global.linkSizeTypes[`Layer${i}`] = currentSize; 
     }
 }
 
 // Make radius individually larger based on quantity of children
-// Up until the maximum size ratio based on the default VertexGraph.Global.sizeTypes
-function radiusMultiply(d) {
-    const multiplier = 1 + (d.children.length * VertexGraph.Config.radiusMultiplier); 
-    let multipiedSize = VertexGraph.Global.sizeTypes[d.data.Type] * multiplier; 
+// Up until the maximum size ratio based on the default currentGraph.Global.sizeTypes
+function radiusMultiply(d, currentGraph) {
+    const multiplier = 1 + (d.children.length * currentGraph.Config.radiusMultiplier); 
+    let multipiedSize = currentGraph.Global.sizeTypes[d.data.Type] * multiplier; 
 
-    const maxMultipliedSize = VertexGraph.Global.sizeTypes[d.data.Type] * VertexGraph.Config.maxMultipliedRadiusRatio; 
+    const maxMultipliedSize = currentGraph.Global.sizeTypes[d.data.Type] * currentGraph.Config.maxMultipliedRadiusRatio; 
     if (multipiedSize > maxMultipliedSize) multipiedSize = maxMultipliedSize; 
 
     return multipiedSize; 
 }
 
 // Find new start point for links
-// This allows transparent nodes without normal overlapping link lines
+// AdjustLinkStart allows transparent nodes without normal overlapping link lines
 // hierarchyPos should be 'source' or 'target', axis should be 'x' or 'y'
-function adjustLinkStart(data, hierarchyPos, axis) {
+function adjustLinkStart(data, hierarchyPos, axis, currentGraph) {
     let oppositePos; 
     if (hierarchyPos == 'source') oppositePos = 'target'; 
     else if (hierarchyPos == 'target') oppositePos = 'source'; 
@@ -471,7 +470,7 @@ function adjustLinkStart(data, hierarchyPos, axis) {
     }
 
     const fullLink = Math.sqrt(Math.pow(difference.x, 2) + Math.pow(difference.y, 2)); 
-    const ratio = radiusMultiply(data[hierarchyPos]) / fullLink; 
+    const ratio = radiusMultiply(data[hierarchyPos], currentGraph) / fullLink; 
     
     const adjustment = difference[axis] * ratio; 
 
@@ -479,50 +478,50 @@ function adjustLinkStart(data, hierarchyPos, axis) {
 }
 
 // Functions for panning svg
-function pan(dx, dy) {     	
-    VertexGraph.Global.transformMatrix[4] += dx;
-    VertexGraph.Global.transformMatrix[5] += dy;
+function pan(dx, dy, currentGraph) {     	
+    currentGraph.Global.transformMatrix[4] += dx;
+    currentGraph.Global.transformMatrix[5] += dy;
               
-    const newMatrix = "matrix(" +  VertexGraph.Global.transformMatrix.join(' ') + ")";
-    VertexGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
+    const newMatrix = "matrix(" +  currentGraph.Global.transformMatrix.join(' ') + ")";
+    currentGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
 }
-function panStart(event) {
-    VertexGraph.Global.lastX = event.x; 
-    VertexGraph.Global.lastY = event.y; 
+function panStart(event, currentGraph) {
+    currentGraph.Global.lastX = event.x; 
+    currentGraph.Global.lastY = event.y; 
 }
-function panning(event) {
-    dx = VertexGraph.Global.lastX - event.x; 
-    dy = VertexGraph.Global.lastY - event.y; 
-    pan(-dx * VertexGraph.Config.panMultiplier, -dy * VertexGraph.Config.panMultiplier); 
-    VertexGraph.Global.lastX = event.x; 
-    VertexGraph.Global.lastY = event.y; 
+function panning(event, currentGraph) {
+    dx = currentGraph.Global.lastX - event.x; 
+    dy = currentGraph.Global.lastY - event.y; 
+    pan(-dx * currentGraph.Config.panMultiplier, -dy * currentGraph.Config.panMultiplier, currentGraph); 
+    currentGraph.Global.lastX = event.x; 
+    currentGraph.Global.lastY = event.y; 
 }
-function panEnd(event) {
-    dx = VertexGraph.Global.lastX - event.x; 
-    dy = VertexGraph.Global.lastY - event.y; 
-    pan(-dx * VertexGraph.Config.panMultiplier, -dy * VertexGraph.Config.panMultiplier); 
+function panEnd(event, currentGraph) {
+    dx = currentGraph.Global.lastX - event.x; 
+    dy = currentGraph.Global.lastY - event.y; 
+    pan(-dx * currentGraph.Config.panMultiplier, -dy * currentGraph.Config.panMultiplier, currentGraph); 
 }
 
 // Function for moving elements in the svg (Breaks if in a different file)
-function moveStart(event) {
-    if (!event.active) VertexGraph.Global.simulation.alphaTarget(0.3).restart();
+function moveStart(event, currentGraph) {
+    if (!event.active) currentGraph.Global.simulation.alphaTarget(0.3).restart();
     if (event.subject.Anchored) {
         event.subject.Anchored = false; 
         event.subject.shouldBeAnchored = true; 
     }
-    VertexGraph.Global.lastX = event.x; 
-    VertexGraph.Global.lastY = event.y; 
+    currentGraph.Global.lastX = event.x; 
+    currentGraph.Global.lastY = event.y; 
 }
-function moving(event) {
-    dx = VertexGraph.Global.lastX - event.x; 
-    dy = VertexGraph.Global.lastY - event.y; 
+function moving(event, currentGraph) {
+    dx = currentGraph.Global.lastX - event.x; 
+    dy = currentGraph.Global.lastY - event.y; 
     event.subject.fx = event.x + dx; 
     event.subject.fy = event.y + dy; 
-    VertexGraph.Global.lastX = event.x; 
-    VertexGraph.Global.lastY = event.y; 
+    currentGraph.Global.lastX = event.x; 
+    currentGraph.Global.lastY = event.y; 
 }
-function moveEnd(event) {
-    if (!event.active) VertexGraph.Global.simulation.alphaTarget(0);
+function moveEnd(event, currentGraph) {
+    if (!event.active) currentGraph.Global.simulation.alphaTarget(0);
     if (event.subject.shouldBeAnchored) {
         event.subject.shouldBeAnchored = false; 
         event.subject.Anchored = true; 
@@ -532,73 +531,73 @@ function moveEnd(event) {
 }
 
 // Functions for zooming svg
-function zoom(scale) {
+function zoom(scale, currentGraph) {
     for (let i = 0; i < 6; i++) {
-      VertexGraph.Global.transformMatrix[i] *= scale;
+      currentGraph.Global.transformMatrix[i] *= scale;
     }
-    VertexGraph.Global.transformMatrix[4] += (1 - scale) * VertexGraph.Global.centerX;
-    VertexGraph.Global.transformMatrix[5] += (1 - scale) * VertexGraph.Global.centerY;
+    currentGraph.Global.transformMatrix[4] += (1 - scale) * currentGraph.Global.centerX;
+    currentGraph.Global.transformMatrix[5] += (1 - scale) * currentGraph.Global.centerY;
                   
-    const newMatrix = "matrix(" +  VertexGraph.Global.transformMatrix.join(' ') + ")";
-    VertexGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
+    const newMatrix = "matrix(" +  currentGraph.Global.transformMatrix.join(' ') + ")";
+    currentGraph.Global.matrixGroup.setAttributeNS(null, "transform", newMatrix);
 }
-function addZoom() {
-    let svgElement = document.getElementById(VertexGraph.Global.svgID); 
-    if (svgElement == null) svgElement = document.getElementById(VertexGraph.Global.svgID.substring(1)); 
+function addZoom(currentGraph) {
+    let svgElement = document.getElementById(currentGraph.Global.svgID); 
+    if (svgElement == null) svgElement = document.getElementById(currentGraph.Global.svgID.substring(1)); 
     svgElement.addEventListener('mousewheel', (event) => {
         event.preventDefault();
         if (event.deltaY > 0) {
-            zoom(0.8); 
+            zoom(0.8, currentGraph); 
         } else if (event.deltaY < 0) {
-            zoom(1.2); 
+            zoom(1.2, currentGraph); 
         }
     });
 }
 
 // D3 GRAPH
-function runGraph() {
+function runGraph(currentGraph) {
     // Set colors, find node radii, find link sizes, and add zooming
-    shuffle(VertexGraph.Config.colorSets); 
-    colorSetter(); 
-    sizeTyper(); 
-    linkSizeTyper(); 
-    addZoom(); 
+    shuffle(currentGraph.Config.colorSets); 
+    colorSetter(currentGraph); 
+    sizeTyper(currentGraph); 
+    linkSizeTyper(currentGraph); 
+    addZoom(currentGraph); 
     
     // Create static elements in the svg
-    if (VertexGraph.Global.svgID.substring(0, 1) != '#') VertexGraph.Global.svgID = `#${VertexGraph.Global.svgID}`; 
-    const web = d3.select(VertexGraph.Global.svgID)
+    if (currentGraph.Global.svgID.substring(0, 1) != '#') currentGraph.Global.svgID = `#${currentGraph.Global.svgID}`; 
+    const web = d3.select(currentGraph.Global.svgID)
         .style('position', 'relative')
-        .style('width', VertexGraph.Global.svgWidth)
-        .style('height', VertexGraph.Config.svgHeight); 
+        .style('width', currentGraph.Global.svgWidth)
+        .style('height', currentGraph.Config.svgHeight); 
     
-    if (VertexGraph.Config.fullScreenMode) {
+    if (currentGraph.Config.fullScreenMode) {
         d3.select('#body').style('margin', 0)
             .style('overflow-y', 'hidden'); 
-    }
+    } 
 
     web.append('rect')
         .attr('x', 0)
         .attr('y', 0)
-        .attr('width', VertexGraph.Global.svgWidth)
-        .attr('height', VertexGraph.Config.svgHeight)
-        .attr('id', 'zoomsquare')
-        .attr('fill', VertexGraph.Config.backgroundColor)
+        .attr('width', currentGraph.Global.svgWidth)
+        .attr('height', currentGraph.Config.svgHeight)
+        .attr('id', currentGraph.Global.svgID.substring(1) + '-zoomsquare')
+        .attr('fill', currentGraph.Config.backgroundColor)
         .call(d3.drag()
-        .on('start', event => panStart(event))
-        .on('drag', event => panning(event))
-        .on('end', event => panEnd(event)));  
+        .on('start', event => panStart(event, currentGraph))
+        .on('drag', event => panning(event, currentGraph))
+        .on('end', event => panEnd(event, currentGraph)));  
     
-    const webGroup = web.append('g').attr('id', 'matrixGroup'); 
-    VertexGraph.Global.matrixGroup = document.getElementById("matrixGroup");
+    const webGroup = web.append('g').attr('id', currentGraph.Global.svgID.substring(1) + '-matrixGroup'); 
+    currentGraph.Global.matrixGroup = document.getElementById(currentGraph.Global.svgID.substring(1) + '-matrixGroup');
 
-    // Manage force VertexGraph.Global.simulation
-    VertexGraph.Global.simulation = d3.forceSimulation(VertexGraph.Global.nodes)
-        .force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength).distanceMax(VertexGraph.Config.regularForceDistance))
-        .force('center', d3.forceCenter(VertexGraph.Global.centerX, VertexGraph.Global.centerY))
+    // Manage force currentGraph.Global.simulation
+    currentGraph.Global.simulation = d3.forceSimulation(currentGraph.Global.nodes)
+        .force('charge', d3.forceManyBody().strength(currentGraph.Config.baseStrength).distanceMax(currentGraph.Config.regularForceDistance))
+        .force('center', d3.forceCenter(currentGraph.Global.centerX, currentGraph.Global.centerY))
         .on('tick', ticked);
     
     refresh(); 
-    VertexGraph.Global.firstRefresh = false; 
+    currentGraph.Global.firstRefresh = false; 
 
     function ticked() {
         seperateElements(); 
@@ -609,58 +608,58 @@ function runGraph() {
     // Lots of manual tweaking to get "right"
     function seperateElements() {
         // Make first separation uniquely strong
-        if (!VertexGraph.Global.seperationActive) return; 
-        const seperationEnhancement = VertexGraph.Global.nodes.filter(el => el.data.Type == 'Root').length * 0.005; 
+        if (!currentGraph.Global.seperationActive) return; 
+        const seperationEnhancement = currentGraph.Global.nodes.filter(el => el.data.Type == 'Root').length * 0.005; 
 
-        if (VertexGraph.Global.firstSeperation) {
-            const enhancedDelay = VertexGraph.Config.startSeperateDelay * (1 + (seperationEnhancement / 5)); 
-            const enhancedStrength = VertexGraph.Config.baseStrength * (1 + seperationEnhancement); 
+        if (currentGraph.Global.firstSeperation) {
+            const enhancedDelay = currentGraph.Config.startSeperateDelay * (1 + (seperationEnhancement / 5)); 
+            const enhancedStrength = currentGraph.Config.baseStrength * (1 + seperationEnhancement); 
 
             // Strengthen and activate forces for start delay
-            if (VertexGraph.Global.ticks < enhancedDelay) {
-                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget)
+            if (currentGraph.Global.ticks < enhancedDelay) {
+                currentGraph.Global.simulation.alphaTarget(currentGraph.Config.seperationAlphaTarget)
                     .force('charge', d3.forceManyBody().strength(enhancedStrength))
                     .restart(); 
             } 
 
             // Slightly slow down seperation intensity
-            if (VertexGraph.Global.ticks > (enhancedDelay / 2)) {
-                const targetRatio = enhancedDelay / VertexGraph.Global.ticks; 
-                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget * (targetRatio - 1))
+            if (currentGraph.Global.ticks > (enhancedDelay / 2)) {
+                const targetRatio = enhancedDelay / currentGraph.Global.ticks; 
+                currentGraph.Global.simulation.alphaTarget(currentGraph.Config.seperationAlphaTarget * (targetRatio - 1))
             }
 
             // End start seperation
-            if (VertexGraph.Global.ticks >= enhancedDelay) {
-                VertexGraph.Global.simulation.alphaTarget(0)
+            if (currentGraph.Global.ticks >= enhancedDelay) {
+                currentGraph.Global.simulation.alphaTarget(0)
                     .force('center', null)
-                    .force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength)); 
-                VertexGraph.Global.firstSeperation = false; 
-                VertexGraph.Global.seperationActive = false; 
+                    .force('charge', d3.forceManyBody().strength(currentGraph.Config.baseStrength)); 
+                currentGraph.Global.firstSeperation = false; 
+                currentGraph.Global.seperationActive = false; 
             }; 
-            VertexGraph.Global.ticks++; 
+            currentGraph.Global.ticks++; 
         } else {
-            const enhancedDelay = VertexGraph.Config.clickSeperateDelay * (1 + (seperationEnhancement / 10));
-            const enhancedStrength = VertexGraph.Config.baseStrength * (1 + (seperationEnhancement / 3)); 
+            const enhancedDelay = currentGraph.Config.clickSeperateDelay * (1 + (seperationEnhancement / 10));
+            const enhancedStrength = currentGraph.Config.baseStrength * (1 + (seperationEnhancement / 3)); 
 
             // Strengthen and activate forces for expansion delay
-            if (VertexGraph.Global.ticks < enhancedDelay) {
-                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget)
+            if (currentGraph.Global.ticks < enhancedDelay) {
+                currentGraph.Global.simulation.alphaTarget(currentGraph.Config.seperationAlphaTarget)
                     .force('charge', d3.forceManyBody().strength(enhancedStrength))
                     .restart(); 
             }
 
             // Slightly slow down seperation intensity
-            if (VertexGraph.Global.ticks > (enhancedDelay / 2)) {
-                const targetRatio = enhancedDelay / VertexGraph.Global.ticks; 
-                VertexGraph.Global.simulation.alphaTarget(VertexGraph.Config.seperationAlphaTarget * (targetRatio - 1))
+            if (currentGraph.Global.ticks > (enhancedDelay / 2)) {
+                const targetRatio = enhancedDelay / currentGraph.Global.ticks; 
+                currentGraph.Global.simulation.alphaTarget(currentGraph.Config.seperationAlphaTarget * (targetRatio - 1))
             }
 
             // End click seperation
-            if (VertexGraph.Global.ticks >= enhancedDelay) {
-                VertexGraph.Global.simulation.alphaTarget(0).force('charge', d3.forceManyBody().strength(VertexGraph.Config.baseStrength)); 
-                VertexGraph.Global.seperationActive = false;
+            if (currentGraph.Global.ticks >= enhancedDelay) {
+                currentGraph.Global.simulation.alphaTarget(0).force('charge', d3.forceManyBody().strength(currentGraph.Config.baseStrength)); 
+                currentGraph.Global.seperationActive = false;
             }
-            VertexGraph.Global.ticks++; 
+            currentGraph.Global.ticks++; 
         }
     }
 
@@ -670,8 +669,8 @@ function runGraph() {
         let activeNodes = []; 
         let rootNodes = []; 
         let anchoredNodes = []; 
-        for (let i = 0; i < VertexGraph.Global.nodes.length; i++) { 
-            const currentNode = VertexGraph.Global.nodes[i]; 
+        for (let i = 0; i < currentGraph.Global.nodes.length; i++) { 
+            const currentNode = currentGraph.Global.nodes[i]; 
 
             if (currentNode.Active) activeNodes.push(currentNode); 
             if (currentNode.data.Type == 'Root') rootNodes.push(currentNode); 
@@ -679,7 +678,7 @@ function runGraph() {
         }
 
         // On startup, only open roots if set so
-        if (VertexGraph.Global.firstRefresh && VertexGraph.Config.startCollapsed) {
+        if (currentGraph.Global.firstRefresh && currentGraph.Config.startCollapsed) {
             for (let i = (activeNodes.length - 1); i >= 0; i--) {
                 const currentNode = activeNodes[i]; 
                 if (currentNode.data.Type != 'Root') {
@@ -689,11 +688,11 @@ function runGraph() {
             }
         }
 
-        let links = createLinks(activeNodes); 
+        let links = createLinks(activeNodes, currentGraph); 
 
         // Refresh force simulation
-        VertexGraph.Global.simulation.nodes(activeNodes)
-            .force('link', d3.forceLink().links(links).distance(d => VertexGraph.Global.linkSizeTypes[d.source.data.Type]).strength(1))
+        currentGraph.Global.simulation.nodes(activeNodes)
+            .force('link', d3.forceLink().links(links).distance(d => currentGraph.Global.linkSizeTypes[d.source.data.Type]).strength(1))
             .restart(); 
 
         // Create and refresh lines to fit links
@@ -712,10 +711,10 @@ function runGraph() {
             .enter()
             .append('circle')
             .attr('class', 'indicatorCircle')
-            .attr('r', d => radiusMultiply(d) * 0.8)
+            .attr('r', d => radiusMultiply(d, currentGraph) * 0.8)
             .attr('stroke-width', '4px')
             .style('stroke', d => d.data.Color)
-            .style('fill', VertexGraph.Config.backgroundColor); 
+            .style('fill', currentGraph.Config.backgroundColor); 
 
         // Create anchored indicator signs
         const anchorSigns = webGroup.selectAll('.anchorSign'); 
@@ -728,23 +727,23 @@ function runGraph() {
             .exit()
             .remove(); 
 
-        // Create and refresh circles to fit VertexGraph.Global.nodes
-        // Create all VertexGraph.Global.nodes here and hide VertexGraph.Global.nodes if collapsed
+        // Create and refresh circles to fit currentGraph.Global.nodes
+        // Create all currentGraph.Global.nodes here and hide currentGraph.Global.nodes if collapsed
         const circles = webGroup.selectAll('.node'); 
-        circles.data(VertexGraph.Global.nodes)
+        circles.data(currentGraph.Global.nodes)
             .enter()
             .append('circle')
             .attr('class', 'node')
             .attr('id', d => {
-                VertexGraph.Global.IDnum++; 
-                d.IDnum = VertexGraph.Global.IDnum; 
-                return `node${VertexGraph.Global.IDnum}`; 
+                currentGraph.Global.IDnum++; 
+                d.IDnum = currentGraph.Global.IDnum; 
+                return `node${currentGraph.Global.IDnum}`; 
             })
-            .attr('r', d => radiusMultiply(d))
+            .attr('r', d => radiusMultiply(d, currentGraph))
             .attr('stroke-width', '8px')
             .style('stroke', d => d.data.Color)
             .style('fill', d => d.data.Color)
-            .style('fill-opacity', d => opacityFinder(d))
+            .style('fill-opacity', d => opacityFinder(d, currentGraph))
             .on('mousemove', d => {
                 const node = d.target.__data__; 
                 const nodeD3 = d3.select(`#node${node.IDnum}`); 
@@ -763,7 +762,7 @@ function runGraph() {
 
                 // Change node color
                 if (node.children.length == 0) return; 
-                nodeD3.style('fill-opacity', (VertexGraph.Config.collapsedOpacity + VertexGraph.Config.expandedOpacity) / 2); 
+                nodeD3.style('fill-opacity', (currentGraph.Config.collapsedOpacity + currentGraph.Config.expandedOpacity) / 2); 
             })
             .on('mouseout', d => {
                 const node = d.target.__data__; 
@@ -777,7 +776,7 @@ function runGraph() {
                 }
 
                 // Reset normal attributes for node
-                nodeD3.style('fill-opacity', opacityFinder(node)).attr('cursor', 'auto'); 
+                nodeD3.style('fill-opacity', opacityFinder(node, currentGraph)).attr('cursor', 'auto'); 
             })
             .on('click', d => { 
                 if (d.ctrlKey) {
@@ -790,14 +789,14 @@ function runGraph() {
                     return; 
                 }
 
-                updateBranch(d); 
+                updateBranch(d, currentGraph); 
                 refresh();
             }); 
-        circles.style('fill-opacity', d => opacityFinder(d)); 
+        circles.style('fill-opacity', d => opacityFinder(d, currentGraph)); 
 
-        // Create and refresh text to fit VertexGraph.Global.nodes
+        // Create and refresh text to fit currentGraph.Global.nodes
         const text = webGroup.selectAll('text'); 
-        text.data(VertexGraph.Global.nodes)
+        text.data(currentGraph.Global.nodes)
             .enter()
             .append('text')
             .attr('id', d => `text${d.IDnum}`)
@@ -814,7 +813,7 @@ function runGraph() {
             .style('font-family', 'monospace')
             .style('font-weight', 'bold')
             .style("text-anchor", "middle")
-            .style('fill', VertexGraph.Config.textColor); 
+            .style('fill', currentGraph.Config.textColor); 
     }
 
     // Update state every tick
@@ -833,31 +832,31 @@ function runGraph() {
                     d.oldY = d.y; 
                 }
 
-                return radiusMultiply(d); 
+                return radiusMultiply(d, currentGraph); 
             })
 
         webGroup.selectAll('.anchorSign')
             .style('stroke', d => d.data.Color)
             .attr('x1', d => d.x)
-            .attr('y1', d => d.y + radiusMultiply(d))
+            .attr('y1', d => d.y + radiusMultiply(d, currentGraph))
             .attr('x2', d => d.x)
-            .attr('y2', d => d.y - radiusMultiply(d)); 
+            .attr('y2', d => d.y - radiusMultiply(d, currentGraph)); 
 
         webGroup.selectAll('.indicatorCircle')
             .attr('cx', d => d.x)
             .attr('cy', d => d.y); 
         
-        // Update VertexGraph.Global.nodes' position and visibility
+        // Update currentGraph.Global.nodes' position and visibility
         // If active: sync force data pos with real pos
         // If inactive: Hide node behind parent
         webGroup.selectAll('.node')
             .attr('r', d => {
                 if (!d.Active) return 0; 
-                return radiusMultiply(d); 
+                return radiusMultiply(d, currentGraph); 
             })
             .attr('cx', d => {
                 if (!d.Active) {
-                    const parent = findParentNode(d); 
+                    const parent = findParentNode(d, currentGraph); 
                     
                     d.x = parent.x; 
                     return parent.x; 
@@ -867,7 +866,7 @@ function runGraph() {
             })
             .attr('cy', d => {
                 if (!d.Active) {
-                    const parent = findParentNode(d); 
+                    const parent = findParentNode(d, currentGraph); 
                     
                     d.y = parent.y; 
                     return parent.y; 
@@ -877,10 +876,10 @@ function runGraph() {
             }); 
 
         webGroup.selectAll('.link')
-            .attr('x1', d => adjustLinkStart(d, 'source', 'x'))
-            .attr('y1', d => adjustLinkStart(d, 'source', 'y'))
-            .attr('x2', d => adjustLinkStart(d, 'target', 'x'))
-            .attr('y2', d => adjustLinkStart(d, 'target', 'y'))
+            .attr('x1', d => adjustLinkStart(d, 'source', 'x', currentGraph))
+            .attr('y1', d => adjustLinkStart(d, 'source', 'y', currentGraph))
+            .attr('x2', d => adjustLinkStart(d, 'target', 'x', currentGraph))
+            .attr('y2', d => adjustLinkStart(d, 'target', 'y', currentGraph))
             .attr('stroke-width', '5px')
             .style('stroke', d => d.source.data.Color); 
         
@@ -894,20 +893,20 @@ function runGraph() {
             .attr('x', d => d.x)
             .attr('y', d => d.y); 
             
-        // Add the ability to move VertexGraph.Global.nodes slightly after start
-        // Gives time for VertexGraph.Global.nodes to seperate
-        if (VertexGraph.Global.ticks > VertexGraph.Config.clickSeperateDelay) {
+        // Add the ability to move currentGraph.Global.nodes slightly after start
+        // Gives time for currentGraph.Global.nodes to seperate
+        if (currentGraph.Global.ticks > currentGraph.Config.clickSeperateDelay) {
             movingActivated = true; 
             webGroup.selectAll('circle')
             .call(d3.drag()
-            .on('start', event => moveStart(event))
-            .on('drag', event => moving(event))
-            .on('end', event => moveEnd(event))); 
+            .on('start', event => moveStart(event, currentGraph))
+            .on('drag', event => moving(event, currentGraph))
+            .on('end', event => moveEnd(event, currentGraph))); 
         }
     }
 }
 
-function JSONdataSorter(tree) {
+function JSONdataSorter(tree, currentGraph) {
     // Find webDepth of tree and set types accordingly
     let allWebDepths = []; 
     function setTypes(treeNode, layerDepth, root) {
@@ -929,7 +928,7 @@ function JSONdataSorter(tree) {
             setTypes(currentChild, layerDepth, currentRoot); 
         }
     }
-    VertexGraph.Global.webDepth = Math.max(...allWebDepths); 
+    currentGraph.Global.webDepth = Math.max(...allWebDepths); 
 }
 
 //class for creating a web graph
@@ -988,7 +987,7 @@ class VertexGraphClass {
         expandedOpacity: 0.25, 
         collapsedOpacity: 0.6, 
 
-        maxLinkDistance: 500, 
+        maxLinkDistance: 400, 
         minLinkDistance: 150, 
         circleMax: 45, 
         circleMin: 20, 
@@ -1038,66 +1037,68 @@ class VertexGraphClass {
     };
 
     RunCSV(url, divID) {
+        let currentGraph = this; 
         // Find and set svg height
-        if (VertexGraph.Config.fullScreenMode) {
+        if (currentGraph.Config.fullScreenMode) {
             const body = document.body,
             html = document.documentElement;
-            VertexGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-            VertexGraph.Config.svgWidthRatio = 1
+            currentGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+            currentGraph.Config.svgWidthRatio = 1
         } 
 
         // Find and set svg width
-        VertexGraph.Global.svgWidth = VertexGraph.Config.svgWidth; 
-        if (VertexGraph.Config.svgWidth == -1) {
+        currentGraph.Global.svgWidth = currentGraph.Config.svgWidth; 
+        if (currentGraph.Config.svgWidth == -1) {
             if (window.innerWidth !== undefined) { 
-                VertexGraph.Global.svgWidth = window.innerWidth * VertexGraph.Config.svgWidthRatio;
+                currentGraph.Global.svgWidth = window.innerWidth * currentGraph.Config.svgWidthRatio;
             } else {  
-                VertexGraph.Global.svgWidth = document.documentElement.clientWidth * VertexGraph.Config.svgWidthRatio;
+                currentGraph.Global.svgWidth = document.documentElement.clientWidth * currentGraph.Config.svgWidthRatio;
             }
         }
 
         // Reset global variables effected by svg width and height
-        VertexGraph.Global.svgID = divID;
-        VertexGraph.Global.centerX = VertexGraph.Global.svgWidth / 2; 
-        VertexGraph.Global.centerY = VertexGraph.Config.svgHeight / 2; 
+        currentGraph.Global.svgID = divID;
+        currentGraph.Global.centerX = currentGraph.Global.svgWidth / 2; 
+        currentGraph.Global.centerY = currentGraph.Config.svgHeight / 2; 
 
         d3.csv(url).then(dataInfo => {
             // Arrange columns
-            linkColumnUpdater(dataInfo); 
-            orderColumns(dataInfo); 
+            linkColumnUpdater(dataInfo, currentGraph); 
+            orderColumns(dataInfo, currentGraph); 
     
             // Convert d3 csv JSON into proper nodes
-            CSVdataSorter(dataInfo); 
-            runGraph(); 
+            CSVdataSorter(dataInfo, currentGraph); 
+            runGraph(currentGraph); 
         }); 
     };
 
     RunJSON(data, divID) {
+        let currentGraph = this; 
         // Find and set svg height
-        if (VertexGraph.Config.fullScreenMode) {
+        if (currentGraph.Config.fullScreenMode) {
             const body = document.body,
             html = document.documentElement;
-            VertexGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-            VertexGraph.Config.svgWidthRatio = 1
+            currentGraph.Config.svgHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
+            currentGraph.Config.svgWidthRatio = 1
         } 
 
         // Find and set svg width
-        VertexGraph.Global.svgWidth = VertexGraph.Config.svgWidth; 
-        if (VertexGraph.Config.svgWidth == -1) {
+        currentGraph.Global.svgWidth = currentGraph.Config.svgWidth; 
+        if (currentGraph.Config.svgWidth == -1) {
             if (window.innerWidth !== undefined) { 
-                VertexGraph.Global.svgWidth = window.innerWidth * VertexGraph.Config.svgWidthRatio;
+                currentGraph.Global.svgWidth = window.innerWidth * currentGraph.Config.svgWidthRatio;
             } else {  
-                VertexGraph.Global.svgWidth = document.documentElement.clientWidth * VertexGraph.Config.svgWidthRatio;
+                currentGraph.Global.svgWidth = document.documentElement.clientWidth * currentGraph.Config.svgWidthRatio;
             }
         }
 
         // Reset global variables effected by svg width and height
-        VertexGraph.Global.svgID = divID;
-        VertexGraph.Global.centerX = VertexGraph.Global.svgWidth / 2; 
-        VertexGraph.Global.centerY = VertexGraph.Config.svgHeight / 2; 
+        currentGraph.Global.svgID = divID;
+        currentGraph.Global.centerX = currentGraph.Global.svgWidth / 2; 
+        currentGraph.Global.centerY = currentGraph.Config.svgHeight / 2; 
 
-        JSONdataSorter(data); 
-        flatten(data); 
-        runGraph(); 
+        JSONdataSorter(data, currentGraph); 
+        flatten(data, currentGraph); 
+        runGraph(currentGraph); 
     }; 
 };
